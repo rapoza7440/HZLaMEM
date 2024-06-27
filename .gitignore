@@ -1,0 +1,27 @@
+# please make sure that trailing spaces are removed from all lines
+# otherwise Eclipse will fail to correctly interpret this file
+/bin/
+/dep/
+/lib/
+/.cproject
+/.project
+/.vscode
+*.pvd
+*.vtr
+*.pvtr
+*.vts
+*.pvts
+*.vtk
+*.out
+/Timestep_*
+*.mat
+/models_not_under_git
+/input_models/**
+/src/.settings
+/src/.vscode/
+/src/.project
+/test/*/ProcessorPartitioning*.*
+/test/t8_AdjointGradients/ScalingLaw_Test.dat
+Manifest.toml  
+docs/build/
+

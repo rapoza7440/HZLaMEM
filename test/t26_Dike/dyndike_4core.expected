@@ -1,0 +1,646 @@
+-------------------------------------------------------------------------- 
+                   Lithosphere and Mantle Evolution Model                   
+     Compiled: Date: Aug 21 2023 - Time: 22:12:33 	    
+     Version : 2.1.0 
+-------------------------------------------------------------------------- 
+        STAGGERED-GRID FINITE DIFFERENCE CANONICAL IMPLEMENTATION           
+-------------------------------------------------------------------------- 
+Parsing input file : dyndike_4core.dat 
+   Adding PETSc option: -snes_rtol 5e-2
+   Adding PETSc option: -snes_atol 1e-4
+   Adding PETSc option: -snes_max_it 2
+   Adding PETSc option: -snes_PicardSwitchToNewton_rtol 1e-5
+   Adding PETSc option: -snes_NewtonSwitchToPicard_it 20
+   Adding PETSc option: -js_ksp_type fgmres
+   Adding PETSc option: -js_ksp_monitor
+   Adding PETSc option: -js_ksp_max_it 20
+   Adding PETSc option: -js_ksp_atol 1e-8
+   Adding PETSc option: -js_ksp_rtol 1e-4
+   Adding PETSc option: -snes_linesearch_type l2
+   Adding PETSc option: -snes_linesearch_monitor
+   Adding PETSc option: -snes_linesearch_maxstep 10
+   Adding PETSc option: -snes_ksp_ew
+   Adding PETSc option: -snes_ksp_ew_rtolmax 1e-4
+   Adding PETSc option: -pstokes mg
+   Adding PETSc option: -pcmat_type mono
+   Adding PETSc option: -jp_type mg
+   Adding PETSc option: -gmg_pc_type mg
+   Adding PETSc option: -gmg_pc_mg_levels 3
+   Adding PETSc option: -gmg_pc_mg_galerkin
+   Adding PETSc option: -gmg_pc_mg_type multiplicative
+   Adding PETSc option: -gmg_pc_mg_cycle_type v
+   Adding PETSc option: -gmg_mg_levels_ksp_type richardson
+   Adding PETSc option: -gmg_mg_levels_ksp_richardson_scale 0.5
+   Adding PETSc option: -gmg_mg_levels_ksp_max_it 20
+   Adding PETSc option: -gmg_mg_levels_pc_type jacobi
+   Adding PETSc option: -crs_ksp_type preonly
+   Adding PETSc option: -crs_pc_type lu
+   Adding PETSc option: -crs_pc_factor_mat_solver_package mumps
+   Adding PETSc option: -objects_dump
+Finished parsing input file 
+--------------------------------------------------------------------------
+Scaling parameters:
+   Temperature : 1000. [C/K] 
+   Length      : 1000. [m] 
+   Viscosity   : 1e+19 [Pa*s] 
+   Stress      : 1e+09 [Pa] 
+--------------------------------------------------------------------------
+Time stepping parameters:
+   Simulation end time          : 10. [Myr] 
+   Maximum number of steps      : 5 
+   Time step                    : 0.001 [Myr] 
+   Minimum time step            : 1e-05 [Myr] 
+   Maximum time step            : 0.1 [Myr] 
+   Time step increase factor    : 0.1 
+   CFL criterion                : 0.5 
+   CFLMAX (fixed time steps)    : 1. 
+   Output every [n] steps       : 5 
+   Output [n] initial steps     : 1 
+   Save restart every [n] steps : 60 
+--------------------------------------------------------------------------
+Grid parameters:
+   Total number of cpu                  : 4 
+   Processor grid  [nx, ny, nz]         : [1, 2, 2]
+   Fine grid cells [nx, ny, nz]         : [32, 32, 24]
+   Number of cells                      :  24576
+   Number of faces                      :  76288
+   Maximum cell aspect ratio            :  1.00000
+   Lower coordinate bounds [bx, by, bz] : [-16., -16., -21.]
+   Upper coordinate bounds [ex, ey, ez] : [16., 16., 3.]
+--------------------------------------------------------------------------
+Softening laws: 
+--------------------------------------------------------------------------
+   SoftLaw [0] : A = 0.95, APS1 = 0.01, APS2 = 0.15, healTau = 0.15
+--------------------------------------------------------------------------
+Material parameters: 
+--------------------------------------------------------------------------
+- Melt factor mfc = 0.000000   Phase ID : 0   
+   (dens)   : rho = 1000. [kg/m^3]  
+   (elast)  : G = 4e+10 [Pa]  Vs = 6324.56 [m/s]  
+   (diff)   : eta = 5e+18 [Pa*s]  Bd = 1e-19 [1/Pa/s]  
+   (plast)  : ch = 4e+07 [Pa]  fr = 30. [deg]  chSoftID = 0 healID = 0 
+   (temp)   : Cp = 1000. [J/kg/K]  k = 10000. [W/m/k]  
+
+- Melt factor mfc = 0.000000   Phase ID : 1   
+   (dens)   : rho = 3300. [kg/m^3]  
+   (elast)  : G = 4e+10 [Pa]  Vs = 3481.55 [m/s]  
+   (disl)   : Bn = 1.1e-16 [1/Pa^n/s]  En = 530000. [J/mol]  Vn = 1.5e-05 [m^3/mol]  n = 3.5 [ ]  
+   (plast)  : ch = 4e+07 [Pa]  fr = 30. [deg]  chSoftID = 0 healID = 0 
+   (temp)   : alpha = 3e-05 [1/K]  Cp = 1200. [J/kg/K]  k = 3.5 [W/m/k]  
+
+- Melt factor mfc = 0.000000   Phase ID : 2   
+   (dens)   : rho = 3300. [kg/m^3]  
+   (elast)  : G = 4e+10 [Pa]  Vs = 3481.55 [m/s]  
+   (disl)   : Bn = 1.1e-16 [1/Pa^n/s]  En = 530000. [J/mol]  Vn = 1.5e-05 [m^3/mol]  n = 3.5 [ ]  
+   (plast)  : ch = 4e+07 [Pa]  fr = 30. [deg]  chSoftID = 0 healID = 0 
+   (temp)   : alpha = 3e-05 [1/K]  Cp = 1000. [J/kg/K]  k = 3.5 [W/m/k]  nu_k = 5. []  T_Nu = 600. [C]  T_liq = 1300. [C]  T_sol = 1000. [C]  Latent_hx = 500000. [J/kg]  
+
+- Melt factor mfc = 0.000000   Phase ID : 3   
+   (dens)   : rho = 3300. [kg/m^3]  
+   (elast)  : G = 4e+10 [Pa]  Vs = 3481.55 [m/s]  
+   (disl)   : Bn = 1.1e-16 [1/Pa^n/s]  En = 530000. [J/mol]  Vn = 1.5e-05 [m^3/mol]  n = 3.5 [ ]  
+   (plast)  : ch = 4e+07 [Pa]  fr = 30. [deg]  chSoftID = 0 healID = 0 
+   (temp)   : alpha = 3e-05 [1/K]  Cp = 1000. [J/kg/K]  k = 3.5 [W/m/k]  nu_k = 5. []  T_Nu = 600. [C]  T_liq = 1300. [C]  T_sol = 1000. [C]  Latent_hx = 500000. [J/kg]  
+
+- Melt factor mfc = 0.000000   Phase ID : 4   
+   (dens)   : rho = 3300. [kg/m^3]  
+   (elast)  : G = 4e+10 [Pa]  Vs = 3481.55 [m/s]  
+   (disl)   : Bn = 1.1e-16 [1/Pa^n/s]  En = 530000. [J/mol]  Vn = 1.5e-05 [m^3/mol]  n = 3.5 [ ]  
+   (plast)  : ch = 4e+07 [Pa]  fr = 30. [deg]  chSoftID = 0 healID = 0 
+   (temp)   : alpha = 3e-05 [1/K]  Cp = 1000. [J/kg/K]  k = 3.5 [W/m/k]  nu_k = 5. []  T_Nu = 600. [C]  T_liq = 1300. [C]  T_sol = 1000. [C]  Latent_hx = 500000. [J/kg]  
+
+- Melt factor mfc = 0.000000   Phase ID : 5   
+   (dens)   : rho = 3300. [kg/m^3]  
+   (elast)  : G = 4e+10 [Pa]  Vs = 3481.55 [m/s]  
+   (disl)   : Bn = 1.1e-16 [1/Pa^n/s]  En = 530000. [J/mol]  Vn = 1.5e-05 [m^3/mol]  n = 3.5 [ ]  
+   (plast)  : ch = 4e+07 [Pa]  fr = 30. [deg]  chSoftID = 0 healID = 0 
+   (temp)   : alpha = 3e-05 [1/K]  Cp = 1000. [J/kg/K]  k = 3.5 [W/m/k]  nu_k = 5. []  T_Nu = 600. [C]  T_liq = 1300. [C]  T_sol = 1000. [C]  Latent_hx = 500000. [J/kg]  
+
+--------------------------------------------------------------------------
+Phase Transition laws: 
+--------------------------------------------------------------------------
+Phase Transition, NotInAirbox [0]: seg = 0, xbounds=[8., 10.], ybounds=[-16., -8.], zbounds=[-21., 3.] 
+Phase Transition, NotInAirbox [0]: seg = 1, xbounds=[-10., -8.], ybounds=[0., 8.], zbounds=[-21., 3.] 
+     Box Vicinity       :   Use all particles to check inside/outside 
+     Don't set T inside @   
+     Phase Outside      :    1  
+     Phase Inside       :   2  
+     Direction          :   BothWays 
+Phase Transition, NotInAirbox [1]: seg = 0, xbounds=[-1., 1.], ybounds=[-8., 0.], zbounds=[-21., 3.] 
+     Box Vicinity       :   Use all particles to check inside/outside 
+     Don't set T inside @   
+     Phase Outside      :    1  
+     Phase Inside       :   3  
+     Direction          :   BothWays 
+Phase Transition, NotInAirbox [2]: seg = 0, xbounds=[-1., 1.], ybounds=[8., 16.], zbounds=[-21., 3.] 
+     Box Vicinity       :   Use all particles to check inside/outside 
+     Don't set T inside @   
+     Phase Outside      :    1  
+     Phase Inside       :   4  
+     Direction          :   BothWays 
+Phase Transition, NotInAirbox [3]: seg = 0, xbounds=[4., 8.], ybounds=[-16., -8.], zbounds=[-10., 3.] 
+Phase Transition, NotInAirbox [3]: seg = 1, xbounds=[-14., -10.], ybounds=[0., 8.], zbounds=[-10., 3.] 
+PhaseTransLinkRight = 0
+     Box Vicinity       :   Use all particles to check inside/outside 
+     Don't set T inside @   
+     Phase Outside      :    1  
+     Phase Inside       :   5  
+     Direction          :   BothWays 
+
+   Adjusting density values due to phase transitions: 
+--------------------------------------------------------------------------
+Free surface parameters: 
+   Sticky air phase ID       : 0 
+   Initial surface level     : 0. [km] 
+   Erosion model             : none
+   Sedimentation model       : none
+   Correct marker phases     @ 
+--------------------------------------------------------------------------
+Boundary condition parameters: 
+   No-slip boundary mask [lt rt ft bk bm tp]  : 0 0 0 0 0 0 
+   Open top boundary                          @ 
+   Top boundary temperature                   : 1. [C] 
+   Bottom boundary temperature                : 1350. [C] 
+   Adding inflow velocity at boundary         @ 
+      Number of inflow periods                : 1   
+      Inflow velocity boundary                : CompensatingInflow 
+      Inflow phase from next to boundary      @ 
+      Inflow window [bottom, top]             : [-21.00,3.00] [km] 
+      Inflow velocity                         : -2.00 [cm/yr] 
+      Outflow velocity                        : inf [cm/yr] 
+      Bottom flow velocity                    : 0.00 [cm/yr] 
+      Inflow temperature from closest marker  @ 
+--------------------------------------------------------------------------
+Solution parameters & controls:
+   Gravity [gx, gy, gz]                    : [0., 0., -9.81] [m/s^2] 
+   Surface stabilization (FSSA)            :  1. 
+   Shear heating efficiency                :  1. 
+   Activate temperature diffusion          @ 
+   Compute initial guess                   @ 
+   Use lithostatic pressure for creep      @ 
+   Use lithostatic pressure for plasticity @ 
+   Limit pressure at first iteration       @ 
+   Minimum viscosity                       : 5e+18 [Pa*s] 
+   Maximum viscosity                       : 1e+23 [Pa*s] 
+   Reference viscosity (initial guess)     : 1e+20 [Pa*s] 
+   Universal gas constant                  : 8.31446 [J/mol/K] 
+   Minimum cohesion                        : 1000. [Pa] 
+   Minimum friction                        : 1. [deg] 
+   Ultimate yield stress                   : 1e+09 [Pa] 
+   Max. melt fraction (viscosity, density) : 0.15    
+   Rheology iteration number               : 8  
+   Rheology iteration tolerance            : 1e-06    
+   Use Temperature-dependent conductivity  @ 
+   Ground water level type                 : none 
+--------------------------------------------------------------------------
+Dike blocks : 
+--------------------------------------------------------------------------
+  Dike parameters ID[0]: PhaseTransID=0 PhaseID=2 Mf=0.7, Mb=0.7, Mc=-1., y_Mc=0. 
+       dyndike_start=1, Tsol=1000., zmax_magma=-12.,drhomagma=500., magPfac=1., magPwidth=1e+30
+       filtx=2., filty=1.5, istep_nave=1, istep_count=1 
+       nstep_locate=1, out_stress=0, out_dikeloc=0
+--------------------------------------------------------------------------
+  Dike parameters ID[1]: PhaseTransID=1 PhaseID=3 Mf=0.7, Mb=0.7, Mc=-1., y_Mc=0. 
+--------------------------------------------------------------------------
+  Dike parameters ID[2]: PhaseTransID=2 PhaseID=4 Mf=0.7, Mb=0.7, Mc=-1., y_Mc=0. 
+       dyndike_start=4, Tsol=1000., zmax_magma=-12.,drhomagma=500., magPfac=1., magPwidth=1e+30
+       filtx=2., filty=2., istep_nave=1, istep_count=1 
+       nstep_locate=1, out_stress=0, out_dikeloc=0
+--------------------------------------------------------------------------
+Advection parameters:
+   Advection scheme              : Runge-Kutta 2-nd order
+   Periodic marker advection     : 0 0 0 
+   Marker setup scheme           : geometric primitives
+   Velocity interpolation scheme : MINMOD (correction + MINMOD)
+   Marker control type           : AVD for cells + corner insertion
+   Markers per cell [nx, ny, nz] : [3, 3, 3] 
+   Marker distribution type      : random noise
+   Background phase ID           : 0 
+--------------------------------------------------------------------------
+Reading geometric primitives ... done (0.0169282 sec)
+--------------------------------------------------------------------------
+Output parameters:
+   Output file name                        : output 
+   Write .pvd file                         : yes 
+   Phase                                   @ 
+   Density                                 @ 
+   Total effective viscosity               @ 
+   Velocity                                @ 
+   Pressure                                @ 
+   Lithostatic pressure                    @ 
+   Temperature                             @ 
+   Conductivity                            @ 
+   Deviatoric stress tensor                @ 
+   Deviatoric stress second invariant      @ 
+   Deviatoric strain rate second invariant @ 
+   Accumulated Plastic Strain (APS)        @ 
+--------------------------------------------------------------------------
+Surface output parameters:
+   Write .pvd file : yes 
+   Velocity        @ 
+   Topography      @ 
+   Amplitude       @ 
+--------------------------------------------------------------------------
+Preconditioner parameters: 
+   Matrix type                   : monolithic
+   Preconditioner type           : coupled Galerkin geometric multigrid
+   Global coarse grid [nx,ny,nz] : [8, 8, 6]
+   Local coarse grid  [nx,ny,nz] : [8, 4, 3]
+   Number of multigrid levels    :  3
+--------------------------------------------------------------------------
+Solver parameters specified: 
+   Outermost Krylov solver       : fgmres 
+   Solver type                   : multigrid 
+   Multigrid smoother levels KSP : richardson 
+   Multigrid dampening parameter : 0.500000 
+   Multigrid smoother levels PC  : jacobi 
+   Number of smoothening steps   : 20 
+   Coarse level KSP              : preonly 
+   Coarse level PC               : lu 
+   Coarse level solver package   : mumps 
+--------------------------------------------------------------------------
+============================== INITIAL GUESS =============================
+--------------------------------------------------------------------------
+  0 SNES Function norm 5.676829777673e+00 
+  0 PICARD ||F||/||F0||=1.000000e+00 
+** PETSc DEPRECATION WARNING ** : the option -pc_factor_mat_solver_package is deprecated as of version 3.9 and will be removed in a future release. Please use the option -pc_factor_mat_solver_type instead. (Silence this warning with -options_suppress_deprecated_warnings)
+    Residual norms for js_ solve.
+    0 KSP Residual norm 5.676829777673e+00 
+    1 KSP Residual norm 3.558621728240e+00 
+    2 KSP Residual norm 1.554454967577e+00 
+    3 KSP Residual norm 2.943922208675e-01 
+    4 KSP Residual norm 3.401726465807e-02 
+    5 KSP Residual norm 5.120366548231e-03 
+    6 KSP Residual norm 2.328308381645e-04 
+  Linear js_ solve converged due to CONVERGED_RTOL iterations 6
+      Line search: lambdas = [1., 0.5, 0.], fnorms = [0.000232831, 2.83841, 5.67683]
+      Line search terminated: lambda = 1., fnorms = 0.000232831
+  1 SNES Function norm 2.328308381646e-04 
+--------------------------------------------------------------------------
+SNES Convergence Reason : ||F|| < rtol*||F_initial|| 
+Number of iterations    : 1
+SNES solution time      : 0.363435 (sec)
+--------------------------------------------------------------------------
+Residual summary: 
+   Continuity: 
+      |Div|_inf = 1.664500153651e-05 
+      |Div|_2   = 2.172899905880e-04 
+   Momentum: 
+      |mRes|_2  = 8.363766610019e-05 
+   Energy: 
+      |eRes|_2  = 3.770065777355e-03 
+--------------------------------------------------------------------------
+Saving output ... done (0.00497007 sec)
+--------------------------------------------------------------------------
+================================= STEP 1 =================================
+--------------------------------------------------------------------------
+Current time        : 0.00000000 [Myr] 
+Tentative time step : 0.00100000 [Myr] 
+--------------------------------------------------------------------------
+Phase_Transition ... 
+Locating Dike zone: istep=1 dike # 0
+done (0.053299 sec)
+--------------------------------------------------------------------------
+  0 SNES Function norm 4.721769099788e+00 
+  0 PICARD ||F||/||F0||=1.000000e+00 
+    Residual norms for js_ solve.
+    0 KSP Residual norm 4.721769099788e+00 
+    1 KSP Residual norm 3.772463200477e-01 
+    2 KSP Residual norm 2.016489956521e-01 
+    3 KSP Residual norm 1.072046257089e-01 
+    4 KSP Residual norm 3.924788084347e-02 
+    5 KSP Residual norm 3.062437162826e-02 
+    6 KSP Residual norm 1.785877690460e-02 
+    7 KSP Residual norm 9.193376555434e-03 
+    8 KSP Residual norm 5.092205446343e-03 
+    9 KSP Residual norm 2.764285636718e-03 
+   10 KSP Residual norm 1.205695294854e-03 
+   11 KSP Residual norm 7.200907739432e-04 
+   12 KSP Residual norm 4.766087476057e-04 
+   13 KSP Residual norm 2.753207676502e-04 
+  Linear js_ solve converged due to CONVERGED_RTOL iterations 13
+      Line search: lambdas = [1., 0.5, 0.], fnorms = [2.54546, 3.36585, 4.72177]
+      Line search terminated: lambda = 1.14643, fnorms = 2.99428
+  1 SNES Function norm 2.994279470981e+00 
+  1 PICARD ||F||/||F0||=6.341436e-01 
+    Residual norms for js_ solve.
+    0 KSP Residual norm 2.994279470981e+00 
+    1 KSP Residual norm 6.611934757200e-02 
+    2 KSP Residual norm 3.304685071291e-02 
+    3 KSP Residual norm 1.913008306760e-02 
+    4 KSP Residual norm 1.281654284597e-02 
+    5 KSP Residual norm 9.161443364996e-03 
+    6 KSP Residual norm 7.994920361603e-03 
+    7 KSP Residual norm 5.517973146567e-03 
+    8 KSP Residual norm 3.196357462612e-03 
+    9 KSP Residual norm 2.194073012860e-03 
+   10 KSP Residual norm 1.513666986590e-03 
+   11 KSP Residual norm 7.401318580878e-04 
+   12 KSP Residual norm 3.861448430369e-04 
+   13 KSP Residual norm 2.268384060722e-04 
+  Linear js_ solve converged due to CONVERGED_RTOL iterations 13
+      Line search: lambdas = [1., 0.5, 0.], fnorms = [0.992253, 1.92018, 2.99428]
+      Line search terminated: lambda = 1.27454, fnorms = 1.09718
+  2 SNES Function norm 1.097182183788e+00 
+--------------------------------------------------------------------------
+**************   NONLINEAR SOLVER FAILED TO CONVERGE!   ****************** 
+--------------------------------------------------------------------------
+SNES Divergence Reason  : maximum iterations reached
+Number of iterations    : 2
+SNES solution time      : 1.03777 (sec)
+--------------------------------------------------------------------------
+Residual summary: 
+   Continuity: 
+      |Div|_inf = 7.398703297082e-04 
+      |Div|_2   = 1.659340985773e-02 
+   Momentum: 
+      |mRes|_2  = 1.097056700071e+00 
+   Energy: 
+      |eRes|_2  = 8.143018804154e-05 
+--------------------------------------------------------------------------
+Actual time step : 0.00100 [Myr] 
+--------------------------------------------------------------------------
+Performing marker control (standard algorithm)
+Marker control [0]: (Corners ) injected 66 markers in 9.9363e-03 s 
+--------------------------------------------------------------------------
+Saving output ... done (0.00365162 sec)
+--------------------------------------------------------------------------
+================================= STEP 2 =================================
+--------------------------------------------------------------------------
+Current time        : 0.00100000 [Myr] 
+Tentative time step : 0.00110000 [Myr] 
+--------------------------------------------------------------------------
+Phase_Transition ... 
+Locating Dike zone: istep=2 dike # 0
+done (0.0422857 sec)
+--------------------------------------------------------------------------
+  0 SNES Function norm 2.995906455175e+00 
+  0 PICARD ||F||/||F0||=1.000000e+00 
+    Residual norms for js_ solve.
+    0 KSP Residual norm 2.995906455175e+00 
+    1 KSP Residual norm 1.132352841220e-01 
+    2 KSP Residual norm 3.014992693178e-02 
+    3 KSP Residual norm 1.653396510516e-02 
+    4 KSP Residual norm 7.052476332926e-03 
+    5 KSP Residual norm 5.194965006384e-03 
+    6 KSP Residual norm 3.025288903228e-03 
+    7 KSP Residual norm 2.206766974224e-03 
+    8 KSP Residual norm 1.698392985210e-03 
+    9 KSP Residual norm 1.229634026825e-03 
+   10 KSP Residual norm 8.490721517280e-04 
+   11 KSP Residual norm 4.332345613738e-04 
+   12 KSP Residual norm 2.819075063269e-04 
+  Linear js_ solve converged due to CONVERGED_RTOL iterations 12
+      Line search: lambdas = [1., 0.5, 0.], fnorms = [1.38196, 2.20336, 2.99591]
+      Line search terminated: lambda = 2.00247, fnorms = 3.03555
+  1 SNES Function norm 3.035547032853e+00 
+  1 PICARD ||F||/||F0||=1.013232e+00 
+    Residual norms for js_ solve.
+    0 KSP Residual norm 3.035547032853e+00 
+    1 KSP Residual norm 1.485281984933e-01 
+    2 KSP Residual norm 3.833226795211e-02 
+    3 KSP Residual norm 2.060345271869e-02 
+    4 KSP Residual norm 1.008890193125e-02 
+    5 KSP Residual norm 6.840294578431e-03 
+    6 KSP Residual norm 3.837919521146e-03 
+    7 KSP Residual norm 2.863860688098e-03 
+    8 KSP Residual norm 2.149794047288e-03 
+    9 KSP Residual norm 1.538160091868e-03 
+   10 KSP Residual norm 1.029863903477e-03 
+   11 KSP Residual norm 5.116050683615e-04 
+   12 KSP Residual norm 3.227388485613e-04 
+   13 KSP Residual norm 1.821908753652e-04 
+  Linear js_ solve converged due to CONVERGED_RTOL iterations 13
+      Line search: lambdas = [1., 0.5, 0.], fnorms = [1.09113, 2.03667, 3.03555]
+      Line search terminated: lambda = 1.45114, fnorms = 2.06819
+  2 SNES Function norm 2.068185765955e+00 
+--------------------------------------------------------------------------
+**************   NONLINEAR SOLVER FAILED TO CONVERGE!   ****************** 
+--------------------------------------------------------------------------
+SNES Divergence Reason  : maximum iterations reached
+Number of iterations    : 2
+SNES solution time      : 0.946085 (sec)
+--------------------------------------------------------------------------
+Residual summary: 
+   Continuity: 
+      |Div|_inf = 2.936489733793e-03 
+      |Div|_2   = 2.807375873532e-02 
+   Momentum: 
+      |mRes|_2  = 2.067995219185e+00 
+   Energy: 
+      |eRes|_2  = 1.717794916816e-04 
+--------------------------------------------------------------------------
+Actual time step : 0.00110 [Myr] 
+--------------------------------------------------------------------------
+Performing marker control (standard algorithm)
+Marker control [0]: (Corners ) injected 77 markers in 1.0482e-02 s 
+--------------------------------------------------------------------------
+================================= STEP 3 =================================
+--------------------------------------------------------------------------
+Current time        : 0.00210000 [Myr] 
+Tentative time step : 0.00121000 [Myr] 
+--------------------------------------------------------------------------
+Phase_Transition ... 
+Locating Dike zone: istep=3 dike # 0
+done (0.0411112 sec)
+--------------------------------------------------------------------------
+  0 SNES Function norm 3.252035265442e+00 
+  0 PICARD ||F||/||F0||=1.000000e+00 
+    Residual norms for js_ solve.
+    0 KSP Residual norm 3.252035265442e+00 
+    1 KSP Residual norm 1.327142271871e-01 
+    2 KSP Residual norm 3.053729890849e-02 
+    3 KSP Residual norm 1.613223223079e-02 
+    4 KSP Residual norm 9.004462052441e-03 
+    5 KSP Residual norm 6.511962883664e-03 
+    6 KSP Residual norm 3.951142029541e-03 
+    7 KSP Residual norm 3.096308678467e-03 
+    8 KSP Residual norm 2.215215521726e-03 
+    9 KSP Residual norm 1.500357029456e-03 
+   10 KSP Residual norm 9.615637743779e-04 
+   11 KSP Residual norm 4.849934721932e-04 
+   12 KSP Residual norm 3.176984312593e-04 
+  Linear js_ solve converged due to CONVERGED_RTOL iterations 12
+      Line search: lambdas = [1., 0.5, 0.], fnorms = [1.12522, 2.20971, 3.25204]
+      Line search terminated: lambda = 1.62096, fnorms = 2.18185
+  1 SNES Function norm 2.181846894524e+00 
+  1 PICARD ||F||/||F0||=6.709174e-01 
+    Residual norms for js_ solve.
+    0 KSP Residual norm 2.181846894524e+00 
+    1 KSP Residual norm 1.008245484926e-01 
+    2 KSP Residual norm 2.364368516988e-02 
+    3 KSP Residual norm 1.147315503634e-02 
+    4 KSP Residual norm 6.723340261177e-03 
+    5 KSP Residual norm 4.649963469204e-03 
+    6 KSP Residual norm 2.824350367343e-03 
+    7 KSP Residual norm 2.057050554028e-03 
+    8 KSP Residual norm 1.536760702624e-03 
+    9 KSP Residual norm 9.713943058004e-04 
+   10 KSP Residual norm 6.455184823747e-04 
+   11 KSP Residual norm 3.023457872664e-04 
+   12 KSP Residual norm 1.910202047336e-04 
+  Linear js_ solve converged due to CONVERGED_RTOL iterations 12
+      Line search: lambdas = [1., 0.5, 0.], fnorms = [0.856547, 1.41752, 2.18185]
+      Line search terminated: lambda = 1.18233, fnorms = 1.01278
+  2 SNES Function norm 1.012776114070e+00 
+--------------------------------------------------------------------------
+**************   NONLINEAR SOLVER FAILED TO CONVERGE!   ****************** 
+--------------------------------------------------------------------------
+SNES Divergence Reason  : maximum iterations reached
+Number of iterations    : 2
+SNES solution time      : 0.92159 (sec)
+--------------------------------------------------------------------------
+Residual summary: 
+   Continuity: 
+      |Div|_inf = 1.598335284641e-03 
+      |Div|_2   = 1.287849965996e-02 
+   Momentum: 
+      |mRes|_2  = 1.012694229013e+00 
+   Energy: 
+      |eRes|_2  = 2.353944562370e-02 
+--------------------------------------------------------------------------
+Actual time step : 0.00121 [Myr] 
+--------------------------------------------------------------------------
+Performing marker control (standard algorithm)
+Marker control [0]: (Corners ) injected 75 markers in 1.0674e-02 s 
+--------------------------------------------------------------------------
+================================= STEP 4 =================================
+--------------------------------------------------------------------------
+Current time        : 0.00331000 [Myr] 
+Tentative time step : 0.00133100 [Myr] 
+--------------------------------------------------------------------------
+Phase_Transition ... 
+Locating Dike zone: istep=4 dike # 0
+Locating Dike zone: istep=4 dike # 2
+done (0.0416877 sec)
+--------------------------------------------------------------------------
+  0 SNES Function norm 3.527913899609e+00 
+  0 PICARD ||F||/||F0||=1.000000e+00 
+    Residual norms for js_ solve.
+    0 KSP Residual norm 3.527913899609e+00 
+    1 KSP Residual norm 7.696283841535e-02 
+    2 KSP Residual norm 2.242381743723e-02 
+    3 KSP Residual norm 1.211506223956e-02 
+    4 KSP Residual norm 6.865070120956e-03 
+    5 KSP Residual norm 3.488193957858e-03 
+    6 KSP Residual norm 2.186663531586e-03 
+    7 KSP Residual norm 1.544071157803e-03 
+    8 KSP Residual norm 1.243572796076e-03 
+    9 KSP Residual norm 7.717054306220e-04 
+   10 KSP Residual norm 5.282518680698e-04 
+   11 KSP Residual norm 3.018854519175e-04 
+  Linear js_ solve converged due to CONVERGED_RTOL iterations 11
+      Line search: lambdas = [1., 0.5, 0.], fnorms = [1.23538, 2.33612, 3.52791]
+      Line search terminated: lambda = 1.39292, fnorms = 1.84303
+  1 SNES Function norm 1.843025311003e+00 
+  1 PICARD ||F||/||F0||=5.224122e-01 
+    Residual norms for js_ solve.
+    0 KSP Residual norm 1.843025311003e+00 
+    1 KSP Residual norm 3.784750406159e-02 
+    2 KSP Residual norm 1.207610115815e-02 
+    3 KSP Residual norm 5.378502976342e-03 
+    4 KSP Residual norm 3.092550410781e-03 
+    5 KSP Residual norm 1.281031576844e-03 
+    6 KSP Residual norm 7.792835888650e-04 
+    7 KSP Residual norm 4.641826309673e-04 
+    8 KSP Residual norm 3.901307823157e-04 
+    9 KSP Residual norm 2.757767555368e-04 
+   10 KSP Residual norm 1.723806482269e-04 
+  Linear js_ solve converged due to CONVERGED_RTOL iterations 10
+      Line search: lambdas = [1., 0.5, 0.], fnorms = [0.822222, 1.28223, 1.84303]
+      Line search terminated: lambda = 1.36692, fnorms = 1.09101
+  2 SNES Function norm 1.091011524882e+00 
+--------------------------------------------------------------------------
+**************   NONLINEAR SOLVER FAILED TO CONVERGE!   ****************** 
+--------------------------------------------------------------------------
+SNES Divergence Reason  : maximum iterations reached
+Number of iterations    : 2
+SNES solution time      : 0.845358 (sec)
+--------------------------------------------------------------------------
+Residual summary: 
+   Continuity: 
+      |Div|_inf = 1.439434185968e-03 
+      |Div|_2   = 1.494880647477e-02 
+   Momentum: 
+      |mRes|_2  = 1.090909107401e+00 
+   Energy: 
+      |eRes|_2  = 1.748312518362e-02 
+--------------------------------------------------------------------------
+Actual time step : 0.00133 [Myr] 
+--------------------------------------------------------------------------
+Performing marker control (standard algorithm)
+Marker control [0]: (Corners ) injected 87 markers in 1.1197e-02 s 
+--------------------------------------------------------------------------
+================================= STEP 5 =================================
+--------------------------------------------------------------------------
+Current time        : 0.00464100 [Myr] 
+Tentative time step : 0.00146410 [Myr] 
+--------------------------------------------------------------------------
+Phase_Transition ... 
+Locating Dike zone: istep=5 dike # 0
+Locating Dike zone: istep=5 dike # 2
+done (0.0416615 sec)
+--------------------------------------------------------------------------
+  0 SNES Function norm 3.048044002564e+00 
+  0 PICARD ||F||/||F0||=1.000000e+00 
+    Residual norms for js_ solve.
+    0 KSP Residual norm 3.048044002564e+00 
+    1 KSP Residual norm 5.522341164842e-02 
+    2 KSP Residual norm 2.056160717043e-02 
+    3 KSP Residual norm 1.120153178693e-02 
+    4 KSP Residual norm 5.480150510625e-03 
+    5 KSP Residual norm 2.151852941220e-03 
+    6 KSP Residual norm 1.459481303767e-03 
+    7 KSP Residual norm 1.105310051479e-03 
+    8 KSP Residual norm 8.251211424467e-04 
+    9 KSP Residual norm 4.617228829663e-04 
+   10 KSP Residual norm 3.405120624174e-04 
+   11 KSP Residual norm 2.161444340203e-04 
+  Linear js_ solve converged due to CONVERGED_RTOL iterations 11
+      Line search: lambdas = [1., 0.5, 0.], fnorms = [1.12036, 2.0193, 3.04804]
+      Line search terminated: lambda = 1.34029, fnorms = 1.61701
+  1 SNES Function norm 1.617007762479e+00 
+  1 PICARD ||F||/||F0||=5.305067e-01 
+    Residual norms for js_ solve.
+    0 KSP Residual norm 1.617007762479e+00 
+    1 KSP Residual norm 2.937858988620e-02 
+    2 KSP Residual norm 1.159012548155e-02 
+    3 KSP Residual norm 4.986715629559e-03 
+    4 KSP Residual norm 2.926757988800e-03 
+    5 KSP Residual norm 1.176685413204e-03 
+    6 KSP Residual norm 6.433794916643e-04 
+    7 KSP Residual norm 4.135570300730e-04 
+    8 KSP Residual norm 2.976113800149e-04 
+    9 KSP Residual norm 2.192173928386e-04 
+   10 KSP Residual norm 1.204221973419e-04 
+  Linear js_ solve converged due to CONVERGED_RTOL iterations 10
+      Line search: lambdas = [1., 0.5, 0.], fnorms = [0.652014, 1.0729, 1.61701]
+      Line search terminated: lambda = 1.24212, fnorms = 0.744204
+  2 SNES Function norm 7.442038631258e-01 
+--------------------------------------------------------------------------
+**************   NONLINEAR SOLVER FAILED TO CONVERGE!   ****************** 
+--------------------------------------------------------------------------
+SNES Divergence Reason  : maximum iterations reached
+Number of iterations    : 2
+SNES solution time      : 0.851434 (sec)
+--------------------------------------------------------------------------
+Residual summary: 
+   Continuity: 
+      |Div|_inf = 1.198175332660e-03 
+      |Div|_2   = 1.000206956324e-02 
+   Momentum: 
+      |mRes|_2  = 7.441366463868e-01 
+   Energy: 
+      |eRes|_2  = 2.995789851339e-02 
+--------------------------------------------------------------------------
+Actual time step : 0.00146 [Myr] 
+--------------------------------------------------------------------------
+Performing marker control (standard algorithm)
+Marker control [0]: (Corners ) injected 74 markers in 1.1118e-02 s 
+--------------------------------------------------------------------------
+Saving output ... done (0.00363851 sec)
+--------------------------------------------------------------------------
+=========================== SOLUTION IS DONE! ============================
+--------------------------------------------------------------------------
+Total solution time : 6.08549 (sec) 
+--------------------------------------------------------------------------
