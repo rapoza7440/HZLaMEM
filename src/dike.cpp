@@ -587,17 +587,17 @@ PetscErrorCode Dike_k_heatsource(JacRes *jr,
 					mat = &phases[i];
 
 					// adjust k and heat source according to Behn & Ito [2008]
-					if (Tc < mat->T_liq && Tc > mat->T_sol)
+					if (Tc < mat->T_liq && Tc > mat->T_sol) // partially molten state
 					{
 						kfac += phRat[i] / (1 + (mat->Latent_hx / (mat->Cp * (mat->T_liq - mat->T_sol))));
 						rho_A += phRat[i] * (mat->rho * mat->Cp) * (mat->T_liq - Tc) * tempdikeRHS; // Cp*rho not used in the paper, added to conserve units of rho_A
 					}
-					else if (Tc <= mat->T_sol)
+					else if (Tc <= mat->T_sol) // solid state
 					{
 						kfac += phRat[i];
 						rho_A += phRat[i] * (mat->rho * mat->Cp) * ((mat->T_liq - Tc) + mat->Latent_hx / mat->Cp) * tempdikeRHS;
 					}
-					else if (Tc >= mat->T_liq)
+					else if (Tc >= mat->T_liq) // liquid state
 					{
 						kfac += phRat[i];
 					}

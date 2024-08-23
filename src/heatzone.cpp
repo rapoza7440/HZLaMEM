@@ -175,6 +175,10 @@ PetscErrorCode DBReadHeatZone(DBPropHeatZone *dbheatzone, DBMat *dbm, FB *fb, Ja
 	{
 		heatzone->FunctType = 2;
 	}
+	else if (!strcmp(Dim, "2d_elliptical")) // *mcr
+	{
+		heatzone->FunctType = 3;
+	} // *mcr
 	else
 	{
 		SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_USER, "Unknown parameter for HZ_Type %s [1d_gauss; 2d_gauss]", Dim); // 1d_ydir, 2d_elliptical
@@ -233,7 +237,7 @@ PetscErrorCode GetHeatZoneSource(JacRes *jr,
 	PetscScalar rho, Cp, asthenoTemp, heatRate, spreadingRate;
 	PetscScalar hzRat, st_dev, F_x, delta_hz_cent, hz_ind;
 	PetscScalar hz_left, hz_right, hz_width, hz_x_cent;
-	PetscScalar hz_front, hz_back, hz_y_cent;
+	PetscScalar hz_front, hz_back, hz_length, hz_y_cent; // *mcr added hz_length
 	PetscScalar hz_bottom, hz_top, hz_z_cent;
 	PetscScalar hz_contr, timeRat;
 
@@ -262,6 +266,7 @@ PetscErrorCode GetHeatZoneSource(JacRes *jr,
 		hz_top = heatzone->bounds[5];	 // bottom
 
 		hz_width = hz_right - hz_left; // all gaussian dependent on x-dir width!
+		hz_length = hz_back - hz_front // for elliptical hotspot *mcr
 		st_dev = hz_width / (2 * PetscSqrtScalar(2 * log(2)));
 		hz_x_cent = (hz_right + hz_left) / 2;
 		hz_y_cent = (hz_back + hz_front) / 2;
@@ -307,6 +312,14 @@ PetscErrorCode GetHeatZoneSource(JacRes *jr,
 				delta_hz_cent = PetscSqrtScalar(pow(hz_x_cent - x_c, 2) + pow(hz_y_cent - y_c, 2) + pow(hz_z_cent - z_c, 2)); // distance from the center of hz
 			}
 		}
+		else if (heatzone->FunctType == 3) // 2d_elliptical *mcr
+		{
+			if (x_c > (hz_x_cent - hz_width) && x_c < (hz_x_cent + hz_width) && y_c > (hz_y_cent - hz_length) && y_c < (hz_y_cent + hz_length) && z_c > hz_bottom && z_c < hz_top && Tc >= heatzone->tempStart && Tc <= heatzone->asthenoTemp)
+			{
+				hz_ind = 1;
+				delta_hz_cent = PetscSqrtScalar(pow(hz_x_cent - x_c, 2) + pow(hz_y_cent - y_c, 2)); // distance from the center of hz *mcr (?)
+			}
+		} //*mcr
 
 		// if we are close to the heatzone bounds
 		if (hz_ind == 1)
