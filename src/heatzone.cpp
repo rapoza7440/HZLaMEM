@@ -266,7 +266,7 @@ PetscErrorCode GetHeatZoneSource(JacRes *jr,
 		hz_top = heatzone->bounds[5];	 // bottom
 
 		hz_width = hz_right - hz_left; // all gaussian dependent on x-dir width!
-		hz_length = hz_back - hz_front // for elliptical hotspot *mcr
+		hz_length = hz_back - hz_front; // for elliptical hotspot *mcr
 		st_dev = hz_width / (2 * PetscSqrtScalar(2 * log(2)));
 		hz_x_cent = (hz_right + hz_left) / 2;
 		hz_y_cent = (hz_back + hz_front) / 2;
