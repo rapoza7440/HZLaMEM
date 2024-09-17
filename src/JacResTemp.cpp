@@ -115,7 +115,7 @@ PetscErrorCode JacResGetTempParam(
 		    T_Nu +=  cf*M->T_Nu;
 		}
 		
-		// Temperature-dependent conductivity: phase-dependent nusselt number
+		// Temperature-Depth-dependent conductivity: phase-dependent nusselt number
 		if(ctrl.useTDk)
 		{
 		    if(! M->nu_k)
@@ -125,6 +125,18 @@ PetscErrorCode JacResGetTempParam(
 		      }
 		    nu_k +=  cf*M->nu_k;
 		    T_Nu +=  cf*M->T_Nu;
+		    z_Nu +=  cf*M->z_Nu;
+		}
+
+		// Depth-dependent conductivity: phase-dependent nusselt number *mcr
+		if(ctrl.useDk)
+		{
+		    if(! M->nu_k)
+		      {
+			// set Nusselt number = 1 if not defined 
+			M->nu_k = 1.0;
+		      }
+		    nu_k +=  cf*M->nu_k;
 		    z_Nu +=  cf*M->z_Nu;
 		}
 
@@ -144,6 +156,17 @@ PetscErrorCode JacResGetTempParam(
 		if (Tc <= T_Nu && z_c <= surface && z_c >= surf_depth)
 		{
 			k += k * (nu_k - 1) * (1 - (Tc / T_Nu)) * (1 - ((z_c - surface) / (z_Nu)));
+		} //*mcr
+	}
+
+	// just depth dependent conductivity *mcr
+	if (ctrl.useDk)
+	{
+		surf_depth = surface + z_Nu; // find depth from top of model where condition is applied  
+
+		if (z_c <= surface && z_c >= surf_depth)
+		{
+			k += k * (nu_k - 1) * (1 - ((z_c - surface) / (z_Nu)));
 		} //*mcr
 	}
 
@@ -481,7 +504,7 @@ PetscErrorCode JacResGetTempRes(JacRes *jr, PetscScalar dt)
 	dsz = &fs->dsz;
 	L   =  (PetscInt)dsz->rank;
 
-	// get surf useTDk
+	// get surf useTDk & useDk *mcr
 	surf = jr->surf;
 
 	// access controls
