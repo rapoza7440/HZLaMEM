@@ -148,14 +148,14 @@ PetscErrorCode JacResGetTempParam(
 	    k = k*nu_k;
 	}
 
-	// temperature & depth condition to use T-D conductivity adapted from Gregg et al., 2009 *mcr
+	// temperature & depth (cutoff) condition to use T-D conductivity *mcr
 	if (ctrl.useTDk)
 	{
 		surf_depth = surface + z_Nu; // find depth from top of model where condition is applied  
 
 		if (Tc <= T_Nu && z_c <= surface && z_c >= surf_depth)
 		{
-			k += k * (nu_k - 1) * (1 - (Tc / T_Nu)) * (1 - ((z_c - surface) / (z_Nu)));
+			k += k * (nu_k - 1) * (1 - (Tc / T_Nu)); // * (1 - ((z_c - surface) / (z_Nu)));
 		} //*mcr
 	}
 
