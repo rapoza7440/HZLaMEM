@@ -315,7 +315,7 @@ PetscErrorCode GetHeatZoneSource(JacRes *jr,
 		}
 		else if (heatzone->FunctType == 3) // 2d_elliptical *mcr
 		{
-			if (x_c > (hz_x_cent - hz_width) && x_c < (hz_x_cent + hz_width) && y_c > (hz_y_cent - hz_length) && y_c < (hz_y_cent + hz_length) && z_c > hz_bottom && z_c < hz_top && Tc >= heatzone->tempStart && Tc <= heatzone->asthenoTemp)
+			if (((pow(x_c - hz_x_cent, 2)/pow(hz_width, 2) + pow(y_c - hz_y_cent, 2)/pow(hz_length, 2)) <= 1) && z_c > hz_bottom && z_c < hz_top && Tc >= heatzone->tempStart && Tc <= heatzone->asthenoTemp) // *mcr fix ellipse cutoff 
 			{
 				hz_ind = 2;
 				delta_hz_cent_X = x_c - hz_x_cent;
