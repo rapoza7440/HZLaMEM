@@ -121,6 +121,9 @@ PetscErrorCode DBReadHeatZone(DBPropHeatZone *dbheatzone, DBMat *dbm, FB *fb, Ja
 	// set ID
 	heatzone->ID = ID;
 
+	// Initialize heatzoneAngle at 0 (default value) before potentially reading a new input value *mcr
+	heatzone->heatzoneAngle = 0.0;
+
 	// read and store heatzone  parameters
 	PetscCall(getStringParam(fb, _REQUIRED_, "HeatFunction", Funct, NULL));
 	PetscCall(getStringParam(fb, _REQUIRED_, "FunctType", Dim, NULL));
@@ -130,6 +133,7 @@ PetscErrorCode DBReadHeatZone(DBPropHeatZone *dbheatzone, DBMat *dbm, FB *fb, Ja
 	PetscCall(getScalarParam(fb, _REQUIRED_, "Cp", &heatzone->Cp, 1, scal->cpecific_heat));
 	PetscCall(getScalarParam(fb, _OPTIONAL_, "TimeStart", &heatzone->timeStart, 1, scal->time));
 	PetscCall(getScalarParam(fb, _OPTIONAL_, "TempStart", &heatzone->tempStart, 1, 1));
+	PetscCall(getScalarParam(fb, _OPTIONAL_, "HZ_Angle", &heatzone->heatzoneAngle, 1, scal->angle)); // *mcr input angle in degrees
 
 	// error checking bounds
 	if ((heatzone->bounds[1] < heatzone->bounds[0]) | (heatzone->bounds[3] < heatzone->bounds[2]) | (heatzone->bounds[5] < heatzone->bounds[4]))
@@ -205,6 +209,7 @@ PetscErrorCode DBReadHeatZone(DBPropHeatZone *dbheatzone, DBMat *dbm, FB *fb, Ja
 			PetscPrintf(PETSC_COMM_WORLD, "     Parameters : AsthenoTemp = %1.0f %s, HeatRate = %g %s\n", heatzone->asthenoTemp * scal->temperature - scal->Tshift, scal->lbl_temperature, heatzone->heatRate, scal->lbl_strain_rate);
 			PetscPrintf(PETSC_COMM_WORLD, "                  rho = %1.0f %s, Cp = %g %s\n", heatzone->rho * scal->density, scal->lbl_density, heatzone->Cp * scal->cpecific_heat, scal->lbl_cpecific_heat);
 			PetscPrintf(PETSC_COMM_WORLD, "                  startTime = %g %s, startTemp = %1.0f %s\n", heatzone->timeStart * scal->time, scal->lbl_time, heatzone->tempStart * scal->temperature - scal->Tshift, scal->lbl_temperature);
+			PetscPrintf(PETSC_COMM_WORLD, "                  Angle = %g %s\n", heatzone->heatzoneAngle * scal->angle, scal->lbl_angle); // *mcr added
 		}
 		else if (heatzone->HeatFunction == 1)
 		{
@@ -234,10 +239,11 @@ PetscErrorCode GetHeatZoneSource(JacRes *jr,
 {
 	HeatZone *heatzone;
 	PetscInt nHZ, numHeatZone, AirPhase;
-	PetscScalar rho, Cp, asthenoTemp, heatRate, spreadingRate;
+	PetscScalar rho, Cp, asthenoTemp, heatRate, spreadingRate, heatzoneAngle; // *mcr added heatzoneAngle
 	PetscScalar hzRat, st_dev, F_x, delta_hz_cent, hz_ind, st_dev_y, delta_hz_cent_X, delta_hz_cent_Y; // *mcr added st_dev_y, cent_X, and cent_Y
 	PetscScalar hz_left, hz_right, hz_width, hz_x_cent;
 	PetscScalar hz_front, hz_back, hz_length, hz_y_cent; // *mcr added hz_length
+	PetscScalar ellipse_a, ellipse_b, x_rotated, y_rotated; // *mcr -- elliptical heatzone semi minor and semi major axes, and rotated x,y if angle
 	PetscScalar hz_bottom, hz_top, hz_z_cent;
 	PetscScalar hz_contr, timeRat;
 
@@ -256,6 +262,7 @@ PetscErrorCode GetHeatZoneSource(JacRes *jr,
 		spreadingRate = heatzone->spreadingRate;
 		rho = heatzone->rho;
 		Cp = heatzone->Cp;
+		heatzoneAngle = heatzone->heatzoneAngle;
 
 		// heatzone geometry
 		hz_left = heatzone->bounds[0];	 // left
@@ -266,12 +273,14 @@ PetscErrorCode GetHeatZoneSource(JacRes *jr,
 		hz_top = heatzone->bounds[5];	 // bottom
 
 		hz_width = hz_right - hz_left; // all gaussian dependent on x-dir width!
-		hz_length = hz_back - hz_front; // for elliptical gaussian hotspot *mcr
-		st_dev = hz_width / (2 * PetscSqrtScalar(2 * log(2)));
+		hz_length = hz_back - hz_front; // *mcr
+		st_dev = hz_width / (2 * PetscSqrtScalar(2 * log(2))); // *mcr commented out standard deviations because switched Gaussian to Parabolic
 		st_dev_y = hz_length / (2 * PetscSqrtScalar(2 * log(2))); // for elliptical gaussian hotspot *mcr
 		hz_x_cent = (hz_right + hz_left) / 2;
 		hz_y_cent = (hz_back + hz_front) / 2;
 		hz_z_cent = (hz_top + hz_bottom) / 2;
+		ellipse_a = hz_width / 2; // *mcr semi-x axis, added for parabolic funct
+		ellipse_b = hz_length / 2; // *mcr semi-y axis, added for parabolic funct
 
 		// is timestep past TimeStart?
 		timeRat = 1; // determines the amount of heating applied over timestep; default of 1 implies heating over entire timestep
@@ -313,30 +322,49 @@ PetscErrorCode GetHeatZoneSource(JacRes *jr,
 				delta_hz_cent = PetscSqrtScalar(pow(hz_x_cent - x_c, 2) + pow(hz_y_cent - y_c, 2) + pow(hz_z_cent - z_c, 2)); // distance from the center of hz
 			}
 		}
-		else if (heatzone->FunctType == 3) // 2d_elliptical *mcr
+		else if (heatzone->FunctType == 3) // 2d_elliptical (elliptical paraboloid) *mcr 
 		{
-			if (((pow(x_c - hz_x_cent, 2)/pow(hz_width, 2) + pow(y_c - hz_y_cent, 2)/pow(hz_length, 2)) <= 1) && z_c > hz_bottom && z_c < hz_top && Tc >= heatzone->tempStart && Tc <= heatzone->asthenoTemp) // *mcr fix ellipse cutoff 
+			if (Tc >= heatzone->tempStart && Tc <= heatzone->asthenoTemp && z_c >= hz_bottom && z_c <= hz_top)  // Add check
 			{
 				hz_ind = 2;
 				delta_hz_cent_X = x_c - hz_x_cent;
 				delta_hz_cent_Y = y_c - hz_y_cent;
-			}
-		} //*mcr
+
+				// Debug prints
+        		PetscPrintf(PETSC_COMM_WORLD, "Local angle: %g degrees\n", heatzoneAngle);
+        		PetscPrintf(PETSC_COMM_WORLD, "Structure angle: %g degrees\n", heatzone->heatzoneAngle);
+       			PetscPrintf(PETSC_COMM_WORLD, "Point before rotation: (%g, %g)\n", delta_hz_cent_X, delta_hz_cent_Y);
+
+
+				// if heatzoneAngle for rotated ellipse (CCW)
+				x_rotated = delta_hz_cent_X * cos(heatzoneAngle) - delta_hz_cent_Y * sin(heatzoneAngle);
+				y_rotated = delta_hz_cent_X * sin(heatzoneAngle) + delta_hz_cent_Y * cos(heatzoneAngle);
+
+				// Debug prints
+        		PetscPrintf(PETSC_COMM_WORLD, "Point after rotation: (%g, %g)\n", x_rotated, y_rotated);
+			} 
+		}
 
 		// if we are close to the heatzone bounds
 		// *mcr making F_x values un-normalized so that the maximum value of heating (1) is at the center of the gaussian, when we noramlize the total volume under the curve is 1. Un-normalized value gives us the exact max amount of heating rather than normalized which gives us how much heat is being added to the lithosphere (un-normalized will be easier to see a timescale with)
 		if (hz_ind == 1)
 		{
 			// compute environmental parameters
-			//F_x = (hz_width / (st_dev * PetscSqrtScalar(2 * PETSC_PI))) * exp(-pow(delta_hz_cent, 2) / (2 * pow(st_dev, 2))); // this is normalized by /st_dev 
+			//F_x = (hz_width / (st_dev * PetscSqrtScalar(2 * PETSC_PI))) * exp(-pow(delta_hz_cent, 2) / (2 * pow(st_dev, 2))); //normalized 
 			F_x = exp(-pow(delta_hz_cent, 2) / (2 * pow(st_dev, 2))); // un-normalized so max value (1) is at center of gaussian
 		}
 		if (hz_ind == 2) // *mcr
 		{
-			// compute environmental parameters
-			F_x = exp(-((pow(delta_hz_cent_X, 2) / (2 * pow(st_dev, 2))) + (pow(delta_hz_cent_Y, 2) / (2 * pow(st_dev_y, 2))))); // *mcr UN-NORMALIZED 
-			// normalized: ((width*length)/(2*PETSC_PI*st_dev*st_dev_y)) 
-		} // *mcr
+			// compute environmental parameters (UN-NORMALIZED) -- normalized: ((width*length)/(2*PETSC_PI*st_dev*st_dev_y)) 
+			//F_x = exp(-((pow(delta_hz_cent_X, 2) / (2 * pow(st_dev, 2))) + (pow(delta_hz_cent_Y, 2) / (2 * pow(st_dev_y, 2))))); // Gaussian 
+			F_x = -((pow(x_rotated, 2)) / (pow(ellipse_a, 2))) - ((pow(y_rotated, 2)) / (pow(ellipse_b, 2))) + 1; // Paraboloid 
+
+			// anything outside of heatzone bounds does not heat 
+			if (F_x < 0.0)
+			{
+				F_x = 0.0;
+			} 
+		} 
 
 		if (hz_ind == 1 || hz_ind == 2) // *mcr
 		{

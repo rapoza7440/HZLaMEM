@@ -41,6 +41,7 @@ public:
   PetscScalar tempStart;     // optional parameter to delay heat zone activation
   PetscScalar heatRate;      // required for q_hotspot: heating rate of the hotspot
   PetscScalar spreadingRate; // optional parameter for q_ridge that indicates the spreading velocity of the plate; if not defined it uses bvel_velin specified
+  PetscScalar heatzoneAngle; // optional parameter to rotate elliptical hotspot by an angle (in degrees) CCW
 };
 
 struct DBPropHeatZone
