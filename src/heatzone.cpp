@@ -274,7 +274,7 @@ PetscErrorCode GetHeatZoneSource(JacRes *jr,
 
 		hz_width = hz_right - hz_left; // all gaussian dependent on x-dir width!
 		hz_length = hz_back - hz_front; // *mcr
-		st_dev = hz_width / (2 * PetscSqrtScalar(2 * log(2))); // *mcr commented out standard deviations because switched Gaussian to Parabolic
+		st_dev = hz_width / (2 * PetscSqrtScalar(2 * log(2))); // *mcr for Gaussian 
 		st_dev_y = hz_length / (2 * PetscSqrtScalar(2 * log(2))); // for elliptical gaussian hotspot *mcr
 		hz_x_cent = (hz_right + hz_left) / 2;
 		hz_y_cent = (hz_back + hz_front) / 2;
@@ -330,18 +330,9 @@ PetscErrorCode GetHeatZoneSource(JacRes *jr,
 				delta_hz_cent_X = x_c - hz_x_cent;
 				delta_hz_cent_Y = y_c - hz_y_cent;
 
-				// Debug prints
-        		PetscPrintf(PETSC_COMM_WORLD, "Local angle: %g degrees\n", heatzoneAngle);
-        		PetscPrintf(PETSC_COMM_WORLD, "Structure angle: %g degrees\n", heatzone->heatzoneAngle);
-       			PetscPrintf(PETSC_COMM_WORLD, "Point before rotation: (%g, %g)\n", delta_hz_cent_X, delta_hz_cent_Y);
-
-
 				// if heatzoneAngle for rotated ellipse (CCW)
 				x_rotated = delta_hz_cent_X * cos(heatzoneAngle) - delta_hz_cent_Y * sin(heatzoneAngle);
 				y_rotated = delta_hz_cent_X * sin(heatzoneAngle) + delta_hz_cent_Y * cos(heatzoneAngle);
-
-				// Debug prints
-        		PetscPrintf(PETSC_COMM_WORLD, "Point after rotation: (%g, %g)\n", x_rotated, y_rotated);
 			} 
 		}
 
