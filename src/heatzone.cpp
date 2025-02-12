@@ -179,13 +179,17 @@ PetscErrorCode DBReadHeatZone(DBPropHeatZone *dbheatzone, DBMat *dbm, FB *fb, Ja
 	{
 		heatzone->FunctType = 2;
 	}
-	else if (!strcmp(Dim, "2d_elliptical")) // *mcr
+	else if (!strcmp(Dim, "2d_elliptical-gauss")) // *mcr
 	{
 		heatzone->FunctType = 3;
-	} // *mcr
+	} 
+	else if (!strcmp(Dim, "2d_elliptical-parab")) // *mcr
+	{
+		heatzone->FunctType = 4;
+	} 
 	else
 	{
-		SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_USER, "Unknown parameter for HZ_Type %s [1d_gauss; 2d_gauss]", Dim); // 1d_ydir, 2d_elliptical
+		SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_USER, "Unknown parameter for HZ_Type %s [1d_gauss; 2d_gauss]", Dim); // 1d_ydir ...
 	}
 
 	// temperature scaling
@@ -243,7 +247,7 @@ PetscErrorCode GetHeatZoneSource(JacRes *jr,
 	PetscScalar hzRat, st_dev, F_x, delta_hz_cent, hz_ind, st_dev_y, delta_hz_cent_X, delta_hz_cent_Y; // *mcr added st_dev_y, cent_X, and cent_Y
 	PetscScalar hz_left, hz_right, hz_width, hz_x_cent;
 	PetscScalar hz_front, hz_back, hz_length, hz_y_cent; // *mcr added hz_length
-	PetscScalar ellipse_a, ellipse_b, x_rotated, y_rotated; // *mcr -- elliptical heatzone semi minor and semi major axes, and rotated x,y if angle
+	PetscScalar ellipse_a, ellipse_b, x_rotated, y_rotated; // *mcr added elliptical heatzone semi minor and semi major axes, and rotated x,y if angle
 	PetscScalar hz_bottom, hz_top, hz_z_cent;
 	PetscScalar hz_contr, timeRat;
 
@@ -322,11 +326,24 @@ PetscErrorCode GetHeatZoneSource(JacRes *jr,
 				delta_hz_cent = PetscSqrtScalar(pow(hz_x_cent - x_c, 2) + pow(hz_y_cent - y_c, 2) + pow(hz_z_cent - z_c, 2)); // distance from the center of hz
 			}
 		}
-		else if (heatzone->FunctType == 3) // 2d_elliptical (elliptical paraboloid) *mcr 
+		else if (heatzone->FunctType == 3) // 2d_elliptical-gauss (gaussian) *mcr 
 		{
-			if (Tc >= heatzone->tempStart && Tc <= heatzone->asthenoTemp && z_c >= hz_bottom && z_c <= hz_top)  // Add check
+			if (((pow(x_c - hz_x_cent, 2)/pow(hz_width, 2) + pow(y_c - hz_y_cent, 2)) <=1) && z_c > hz_bottom && z_c < hz_top && Tc >= heatzone->tempStart && Tc <= heatzone->asthenoTemp) 
 			{
 				hz_ind = 2;
+				delta_hz_cent_X = x_c - hz_x_cent;
+				delta_hz_cent_Y = y_c - hz_y_cent;
+
+				// if heatzoneAngle for rotated ellipse (CCW)
+				x_rotated = delta_hz_cent_X * cos(heatzoneAngle) - delta_hz_cent_Y * sin(heatzoneAngle);
+				y_rotated = delta_hz_cent_X * sin(heatzoneAngle) + delta_hz_cent_Y * cos(heatzoneAngle);
+			} 
+		}
+		else if (heatzone->FunctType == 4) // 2d_elliptical-parab (paraboloid) *mcr 
+		{
+			if (Tc >= heatzone->tempStart && Tc <= heatzone->asthenoTemp && z_c >= hz_bottom && z_c <= hz_top)  
+			{
+				hz_ind = 3;
 				delta_hz_cent_X = x_c - hz_x_cent;
 				delta_hz_cent_Y = y_c - hz_y_cent;
 
@@ -344,20 +361,23 @@ PetscErrorCode GetHeatZoneSource(JacRes *jr,
 			//F_x = (hz_width / (st_dev * PetscSqrtScalar(2 * PETSC_PI))) * exp(-pow(delta_hz_cent, 2) / (2 * pow(st_dev, 2))); //normalized 
 			F_x = exp(-pow(delta_hz_cent, 2) / (2 * pow(st_dev, 2))); // un-normalized so max value (1) is at center of gaussian
 		}
-		if (hz_ind == 2) // *mcr
+		if (hz_ind == 2) // *mcr gaussian
 		{
-			// compute environmental parameters (UN-NORMALIZED) -- normalized: ((width*length)/(2*PETSC_PI*st_dev*st_dev_y)) 
-			//F_x = exp(-((pow(delta_hz_cent_X, 2) / (2 * pow(st_dev, 2))) + (pow(delta_hz_cent_Y, 2) / (2 * pow(st_dev_y, 2))))); // Gaussian 
+			// compute environmental parameters (UN-NORMALIZED) -- if want normalized: ((width*length)/(2*PETSC_PI*st_dev*st_dev_y)) 
+			F_x = exp(-((pow(x_rotated, 2) / (2 * pow(st_dev, 2))) + (pow(x_rotated, 2) / (2 * pow(st_dev_y, 2))))); // Gaussian 
+		}
+		if (hz_ind == 3) // *mcr parabolic
+		{
 			F_x = -((pow(x_rotated, 2)) / (pow(ellipse_a, 2))) - ((pow(y_rotated, 2)) / (pow(ellipse_b, 2))) + 1; // Paraboloid 
 
-			// anything outside of heatzone bounds does not heat 
+			// ensure anything outside of heatzone bounds does not heat 
 			if (F_x < 0.0)
 			{
 				F_x = 0.0;
 			} 
 		} 
 
-		if (hz_ind == 1 || hz_ind == 2) // *mcr
+		if (hz_ind == 1 || hz_ind == 2 || hz_ind == 3) // *mcr 
 		{
 
 			// calculate not in air phase ratio
