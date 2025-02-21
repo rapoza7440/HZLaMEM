@@ -364,7 +364,7 @@ PetscErrorCode GetHeatZoneSource(JacRes *jr,
 		if (hz_ind == 2) // *mcr gaussian
 		{
 			// compute environmental parameters (UN-NORMALIZED) -- if want normalized: ((width*length)/(2*PETSC_PI*st_dev*st_dev_y)) 
-			F_x = exp(-((pow(x_rotated, 2) / (2 * pow(st_dev, 2))) + (pow(x_rotated, 2) / (2 * pow(st_dev_y, 2))))); // Gaussian 
+			F_x = exp(-((pow(x_rotated, 2) / (2 * pow(st_dev, 2))) + (pow(y_rotated, 2) / (2 * pow(st_dev_y, 2))))); // Gaussian 
 		}
 		if (hz_ind == 3) // *mcr parabolic
 		{
