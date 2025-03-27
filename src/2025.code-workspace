@@ -1,0 +1,114 @@
+{
+	"folders": [
+		{
+			"path": "/home/mcrpz/LaMEM_Builds/2025/HZLaMEM"
+		},
+		{
+			"path": "/home/mcrpz/petsc-3.18.6"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"cstdio": "cpp",
+			"fstream": "cpp",
+			"cstring": "cpp",
+			"typeinfo": "cpp",
+			"iostream": "cpp",
+			"*.in": "cpp",
+			"string_view": "cpp",
+			"algorithm": "cpp",
+			"array": "cpp",
+			"atomic": "cpp",
+			"bit": "cpp",
+			"*.tcc": "cpp",
+			"bitset": "cpp",
+			"cassert": "cpp",
+			"ccomplex": "cpp",
+			"cctype": "cpp",
+			"cerrno": "cpp",
+			"cfloat": "cpp",
+			"chrono": "cpp",
+			"climits": "cpp",
+			"clocale": "cpp",
+			"cmath": "cpp",
+			"codecvt": "cpp",
+			"complex": "cpp",
+			"condition_variable": "cpp",
+			"csetjmp": "cpp",
+			"csignal": "cpp",
+			"cstdarg": "cpp",
+			"cstddef": "cpp",
+			"cstdint": "cpp",
+			"cstdlib": "cpp",
+			"ctime": "cpp",
+			"cwchar": "cpp",
+			"cwctype": "cpp",
+			"deque": "cpp",
+			"list": "cpp",
+			"map": "cpp",
+			"set": "cpp",
+			"string": "cpp",
+			"unordered_map": "cpp",
+			"unordered_set": "cpp",
+			"vector": "cpp",
+			"exception": "cpp",
+			"filesystem": "cpp",
+			"functional": "cpp",
+			"iterator": "cpp",
+			"memory": "cpp",
+			"memory_resource": "cpp",
+			"numeric": "cpp",
+			"optional": "cpp",
+			"random": "cpp",
+			"ratio": "cpp",
+			"system_error": "cpp",
+			"tuple": "cpp",
+			"type_traits": "cpp",
+			"utility": "cpp",
+			"future": "cpp",
+			"initializer_list": "cpp",
+			"iomanip": "cpp",
+			"ios": "cpp",
+			"iosfwd": "cpp",
+			"istream": "cpp",
+			"limits": "cpp",
+			"locale": "cpp",
+			"mutex": "cpp",
+			"new": "cpp",
+			"ostream": "cpp",
+			"queue": "cpp",
+			"sstream": "cpp",
+			"stack": "cpp",
+			"stdexcept": "cpp",
+			"streambuf": "cpp",
+			"thread": "cpp",
+			"cfenv": "cpp",
+			"cinttypes": "cpp",
+			"cstdbool": "cpp"
+		}
+	},
+	
+	"launch": {
+		"version": "0.2.0",
+		"inputs": [
+			{
+				"id": "commandInput",
+				"description": "Please enter a value",
+				"type": "promptString"
+			  }
+		], 
+		"configurations": [
+			{
+				"name": "C++ Debug",
+				"type": "cppdbg",
+				"request": "launch",
+				"program": "/home/mcrpz/LaMEM_Builds/2025/HZLaMEM/bin/deb/LaMEM",
+				"args": ["-ParamFile", "${input:commandInput}input.dat"],
+				"cwd": "${input:commandInput}",
+				"environment": [],
+				"externalConsole": false,
+				"MIMode": "gdb"
+			  }
+		]
+	}
+}

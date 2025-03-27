@@ -35,8 +35,8 @@
 	LOCAL_TO_LOCAL(da, vec)
 
 #define GET_KC \
-  PetscCall(JacResGetTempParam(jr, jr->svCell[iter++].phRat, &kc, NULL, NULL, lT[k][j][i], COORD_CELL(j,sy,fs->dsy), COORD_CELL(i,sx,fs->dsx), COORD_CELL(k,sz,fs->dsz), j-sy, 1.0, 1.0, NULL)); \
-  buff[k][j][i] = kc;   // added one NULL because of the new variable hz_contr on first iteration 
+  PetscCall(JacResGetTempParam(jr, jr->svCell[iter++].phRat, &kc, NULL, NULL, lT[k][j][i], COORD_CELL(j,sy,fs->dsy), COORD_CELL(i,sx,fs->dsx), COORD_CELL(k,sz,fs->dsz), j-sy, 1.0, 1.0, -1.0)); \
+  buff[k][j][i] = kc;   // added -1.0 for Tn
 
 #define GET_HRXY buff[k][j][i] = jr->svXYEdge[iter++].svDev.Hr;
 #define GET_HRXZ buff[k][j][i] = jr->svXZEdge[iter++].svDev.Hr;
@@ -58,7 +58,7 @@ PetscErrorCode JacResGetTempParam(
     PetscInt    J,                // coordinate of y-plane
     PetscScalar sxx_eff_ave_cell, // lithospheric sxx
 	PetscScalar surface,
-	PetscScalar *hz_contr_) //*mcr heatzone first iteration
+	PetscScalar Tn) //*mcr add Tn
 {
 	// compute effective energy parameters in the cell
 
@@ -67,7 +67,6 @@ PetscErrorCode JacResGetTempParam(
 	Controls    ctrl;
 	PetscScalar cf, k, rho, rho_Cp, rho_A, density, nu_k, T_Nu; 
 	PetscScalar surf_depth, z_Nu;
-	PetscScalar hz_contr; //*mcr
 
 	PetscFunctionBeginUser;
 
@@ -78,7 +77,6 @@ PetscErrorCode JacResGetTempParam(
 	nu_k      = 0.0;
 	T_Nu	  = 0.0;
 	z_Nu	  = 0.0;
-	hz_contr  = 0.0; // *mcr
 	
 	numPhases = jr->dbm->numPhases;
 	phases    = jr->dbm->phases;
@@ -177,18 +175,15 @@ PetscErrorCode JacResGetTempParam(
 		PetscCall(Dike_k_heatsource(jr, phases, Tc, phRat, k, rho_A, y_c, J, sxx_eff_ave_cell));
 	}
 
-	if (ctrl.actHeatZone && jr->ts->iter_start == 0)
+	if (ctrl.actHeatZone && Tn !=  -1.0)
 	{
-		PetscCall(GetHeatZoneSource(jr, phases, Tc, phRat, hz_contr, y_c, x_c, z_c, J, sxx_eff_ave_cell));
-		rho_A += hz_contr;
-
+		PetscCall(GetHeatZoneSource(jr, phases, Tc, phRat, rho_A, y_c, x_c, z_c, J, sxx_eff_ave_cell, Tn));
 	}
 
 	// store
 	if(k_)      (*k_)      = k;
 	if(rho_Cp_) (*rho_Cp_) = rho_Cp;
 	if(rho_A_)  (*rho_A_)  = rho_A;
-	if(hz_contr_) (*hz_contr_) = hz_contr;
 	
 	PetscFunctionReturn(0);
 }
@@ -273,7 +268,6 @@ PetscErrorCode JacResCreateTempParam(JacRes *jr)
 	// energy residual
 	PetscCall(DMCreateGlobalVector(jr->DA_T, &jr->ge));
 	PetscCall(DMCreateGlobalVector(jr->DA_T, &jr->hs));
-	PetscCall(DMCreateGlobalVector(jr->DA_T, &jr->hs_old)); //*mcr
 
 	// create temperature diffusion solver
 	PetscCall(KSPCreate(PETSC_COMM_WORLD, &jr->tksp));
@@ -308,7 +302,6 @@ PetscErrorCode JacResDestroyTempParam(JacRes *jr)
 
 	PetscCall(VecDestroy(&jr->ge));
 	PetscCall(VecDestroy(&jr->hs));
-	PetscCall(VecDestroy(&jr->hs_old)); // *mcr
 
 	PetscCall(KSPDestroy(&jr->tksp));
 
@@ -356,9 +349,6 @@ PetscErrorCode JacResInitTemp(JacRes *jr)
 
 	// apply two-point constraints
 	PetscCall(JacResApplyTempBC(jr));
-
-	// set iter_start to 0 *mcr
-	jr->ts->iter_start = 0;
 
 	PetscFunctionReturn(0);
 }
@@ -497,10 +487,9 @@ PetscErrorCode JacResGetTempRes(JacRes *jr, PetscScalar dt)
  	PetscScalar dx, dy, dz;
 	PetscScalar invdt, kc, rho_Cp, rho_A, Tc, Pc, Tn, Hr, Ha, cond;
 	PetscScalar ***ge, ***lT, ***lk, ***hxy, ***hxz, ***hyz, ***buff, *e,***P;
-	PetscScalar ***heat_source, ***heat_source_old;
+	PetscScalar ***heat_source;
 	PetscScalar ***vx,***vy,***vz;
 	PetscScalar y_c, x_c, z_c;
-	PetscScalar hz_contr;
 
 	PetscErrorCode ierr;
 	PetscFunctionBeginUser;
@@ -549,9 +538,6 @@ PetscErrorCode JacResGetTempRes(JacRes *jr, PetscScalar dt)
 	PetscCall(DMDAVecGetArray(fs->DA_Z,   jr->lvz,  &vz) );
 	PetscCall(DMDAVecGetArray(fs->DA_CEN, jr->lp_lith, &P ));
 	PetscCall(DMDAVecGetArray(surf->DA_SURF, surf->gtopo, &surf_topo)); // *mcr need to define surface (surf.cpp)
-	// get 3d array for old rhoA *mcr
-	PetscCall(DMDAVecGetArray(jr->DA_T,   jr->hs_old,   &heat_source_old));
-
 
 	//---------------
 	// central points
@@ -588,32 +574,21 @@ PetscErrorCode JacResGetTempRes(JacRes *jr, PetscScalar dt)
 		if(jr->ctrl.actDike && jr->ctrl.var_M)
 		{
 			sxx_eff_ave_cell = gsxx_eff_ave[L][j][i];
-			PetscCall(JacResGetTempParam(jr, svCell->phRat, &kc, &rho_Cp, &rho_A, Tc, y_c, x_c, z_c, j-sy, sxx_eff_ave_cell, surface, &hz_contr));
+			PetscCall(JacResGetTempParam(jr, svCell->phRat, &kc, &rho_Cp, &rho_A, Tc, y_c, x_c, z_c, j-sy, sxx_eff_ave_cell, surface, Tn)); // *mcr added Tn
 		}
 		else
 		{
-			PetscCall(JacResGetTempParam(jr, svCell->phRat, &kc, &rho_Cp, &rho_A, Tc, y_c, x_c, z_c, j-sy, 1.0, surface, &hz_contr)); // *mcr added hz_contr 
-			// *mcr debug output-- hz_contr should be equal to rhoA that it spit out in GetHeatZone etc 
-			if(jr->ts->iter_start == 0)
-			{
-				heat_source_old[k][j][i] = hz_contr; // fill heatsource from first iteration to be used in subsequent iterations
-			}
-			else
-			{
-				hz_contr = heat_source_old[k][j][i];
-			}
+			PetscCall(JacResGetTempParam(jr, svCell->phRat, &kc, &rho_Cp, &rho_A, Tc, y_c, x_c, z_c, j-sy, 1.0, surface, Tn)); // *mcr added Tn 
+			// *mcr debug output
 			if(x_c == -0.5 && y_c == -0.5 && z_c == -3.5) // (z,y,x) corresponding to x_c, y_c, z_c from getheatzone debug coords
 			{
 				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "=== Debug Output 2 ===\n"));
 				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Coordinates: x=%.1f, y=%.1f, z=%.1f\n", x_c, y_c, z_c));
-				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "hz_contr = %.6e\n", hz_contr));
 				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "rho_A = %.6e\n", rho_A));
 				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Tc = %.5f\n", Tc));
 				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Tn = %.5f\n", Tn));
 				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "==================\n"));
 			}
-
-			rho_A += hz_contr;
 		}
 		
 
@@ -688,9 +663,6 @@ PetscErrorCode JacResGetTempRes(JacRes *jr, PetscScalar dt)
 	}
 	END_STD_LOOP
 
-	// set iter_start to 1 so heatzone happens only on first one *mcr
-	jr->ts->iter_start = 1;
-
 	// restore access
 	PetscCall(DMDAVecRestoreArray(jr->DA_T,   jr->ge,   &ge));
 	PetscCall(DMDAVecRestoreArray(jr->DA_T,   jr->hs,   &heat_source));
@@ -703,9 +675,7 @@ PetscErrorCode JacResGetTempRes(JacRes *jr, PetscScalar dt)
 	PetscCall(DMDAVecRestoreArray(fs->DA_Y,   jr->lvy,     &vy) );
 	PetscCall(DMDAVecRestoreArray(fs->DA_Z,   jr->lvz,     &vz) );
 	PetscCall(DMDAVecRestoreArray(fs->DA_CEN, jr->lp_lith, &P)  );
-	PetscCall(DMDAVecRestoreArray(surf->DA_SURF, surf->gtopo, &surf_topo)); // *mcr delete? need to define surface (surf.cpp)
-	// restore 3d array *mcr
-	PetscCall(DMDAVecRestoreArray(jr->DA_T,   jr->hs_old,   &heat_source_old));
+	PetscCall(DMDAVecRestoreArray(surf->DA_SURF, surf->gtopo, &surf_topo)); // *mcr need to define surface (surf.cpp)
 
 	if (jr->ctrl.actDike && jr->ctrl.var_M)
 	{
@@ -792,7 +762,7 @@ PetscErrorCode JacResGetTempMat(JacRes *jr, PetscScalar dt)
 		Tc  = lT[k][j][i]; // current temperature
 		
 		// conductivity, heat capacity
-		PetscCall(JacResGetTempParam(jr, svCell->phRat, &kc, &rho_Cp, NULL, Tc, y_c, x_c, z_c, j-sy, 1.0, 1.0, NULL)); //*mcr added last null
+		PetscCall(JacResGetTempParam(jr, svCell->phRat, &kc, &rho_Cp, NULL, Tc, y_c, x_c, z_c, j-sy, 1.0, 1.0, -1.0)); //*mcr added last -1.0
 
 		// check index bounds and TPC multipliers
 		Im1 = i-1; cf[0] = 1.0; if(Im1 < 0)  { Im1++; if(bcT[k][j][i-1] != DBL_MAX) cf[0] = -1.0; }

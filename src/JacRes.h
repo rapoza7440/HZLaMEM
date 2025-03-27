@@ -261,7 +261,6 @@ struct JacRes
 	Vec dT;   // temperature increment (global)
 	Vec ge;   // energy residual (global)
 	Vec hs;   // source heat added via rho_A (global)
-	Vec hs_old; // *mcr storing old rhoA for first iteration heatzone
 	KSP tksp; // temperature diffusion solver
 
 	//==========================
@@ -380,8 +379,7 @@ PetscErrorCode JacResGetTempParam(
     PetscInt J,           // coordinate of cell
     PetscScalar sxx_eff_ave_cell,  // lithospheric effective average sxx
 	PetscScalar surface, 			// surface
-	PetscScalar *hz_contr_);
-	//PetscScalar Tn); // *mcr heatzone first iteration and Tn
+	PetscScalar Tn); // *mcr add Tn
 
 // check whether thermal material parameters are properly defined
 PetscErrorCode JacResCheckTempParam(JacRes *jr);

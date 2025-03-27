@@ -233,13 +233,13 @@ PetscErrorCode GetHeatZoneSource(JacRes *jr,
 								 Material_t *phases,
 								 PetscScalar &Tc,
 								 PetscScalar *phRat,
-								 PetscScalar &hz_contr, 		//&rho_A,
+								 PetscScalar &rho_A, 		
 								 PetscScalar &y_c,
 								 PetscScalar &x_c,
 								 PetscScalar &z_c,
 								 PetscInt J,
-								 PetscScalar sxx_eff_ave_cell)
-								 //PetscScalar Tn) // *mcr added Tn
+								 PetscScalar sxx_eff_ave_cell,
+								 PetscScalar Tn) // *mcr added Tn
 
 {
 	HeatZone *heatzone;
@@ -250,15 +250,15 @@ PetscErrorCode GetHeatZoneSource(JacRes *jr,
 	PetscScalar hz_front, hz_back, hz_length, hz_y_cent; // *mcr added hz_length
 	PetscScalar ellipse_a, ellipse_b, x_rotated, y_rotated; // *mcr added elliptical heatzone semi minor and semi major axes, and rotated x,y if angle
 	PetscScalar hz_bottom, hz_top, hz_z_cent;
-	PetscScalar timeRat; // hz_contr here too before, but not we are making it a 3d array *mcr
-	PetscScalar predDT, dt; // *mcr
-	PetscInt check; // *mcr
+	PetscScalar timeRat, hz_contr; 
+	//PetscScalar predDT, dt; // *mcr
+	//PetscInt check; // *mcr
 
 	PetscFunctionBeginUser;
 
 	numHeatZone = jr->dbheatzone->numHeatZone; // number of heatzones
-	dt = jr->ts->dt; // *mcr access timestep
-	check = 0; // *mcr
+	//dt = jr->ts->dt; // *mcr access timestep
+	//check = 0; // *mcr
 
 
 	for (nHZ = 0; nHZ < numHeatZone; nHZ++) // loop through all heatzone blocks
@@ -407,18 +407,18 @@ PetscErrorCode GetHeatZoneSource(JacRes *jr,
 			// calculate heating contribution
 			if (heatzone->HeatFunction == 0) // q_hotspot
 			{
-				hz_contr = timeRat * hzRat * rho * Cp * heatRate * F_x * (asthenoTemp - Tc); // * invt; // jr->scal->dissipation_rate; // * (jr->scal->stress_si / jr->scal->time) -> at 1 yr  // jr->ts->dt
+				hz_contr = timeRat * hzRat * rho * Cp * heatRate * F_x * (asthenoTemp - Tn); // * invt; // jr->scal->dissipation_rate; // * (jr->scal->stress_si / jr->scal->time) -> at 1 yr  // jr->ts->dt
 				// if statement here if(dT + Tc > Tasth) recalc rhoA with heatRate = 1/dt
-				predDT = (hz_contr/(rho*Cp))*dt;
+				/*predDT = (hz_contr/(rho*Cp))*dt;
 				if(predDT + Tc > asthenoTemp)
 				{
-					hz_contr = (timeRat * hzRat * rho * Cp * F_x * (asthenoTemp - Tc) )/dt;
+					hz_contr = (timeRat * hzRat * rho * Cp * F_x * (asthenoTemp - Tn) )/dt;
 					check = 1;
-				}
+				}*/
 			}
 			else if (heatzone->HeatFunction == 1) // q_ridge
 			{
-				hz_contr = timeRat * hzRat * rho * Cp * F_x * (asthenoTemp - Tc) * spreadingRate / hz_width;
+				hz_contr = timeRat * hzRat * rho * Cp * F_x * (asthenoTemp - Tn) * spreadingRate / hz_width;
 			}
 			else // should not be possible
 			{
@@ -431,7 +431,7 @@ PetscErrorCode GetHeatZoneSource(JacRes *jr,
 				PetscCall(SubtractDikeHeatSource(jr, phases, Tc, phRat, hz_contr, y_c, J, sxx_eff_ave_cell));
 			}
 
-				//rho_A += hz_contr; // add heating to energy equation as source term
+				rho_A += hz_contr; // add heating to energy equation as source term
 
 			// DEBUG OUTPUTS
 			if(x_c == -0.5 && y_c == -0.5 && z_c == -3.5)
@@ -439,15 +439,16 @@ PetscErrorCode GetHeatZoneSource(JacRes *jr,
 				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "=== Debug Output ===\n"));
 				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Coordinates: x=%.1f, y=%.1f, z=%.1f\n", x_c, y_c, z_c));
 				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "rho = %.1e\n", rho));
-				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "hz_contr (rhoA) = %.6e\n", hz_contr));
+				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "hz_contr = %.6e\n", hz_contr));
+				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "(rhoA) = %.6e\n", rho_A));
 				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Cp = %.1e\n", Cp));
 				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "F(x) = %.6f\n", F_x));
 				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Tc = %.5f\n", Tc));
+				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Tn = %.5f\n", Tn));
 				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "timeRat = %.6e\n", timeRat));
 				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "hzRat = %.6e\n", hzRat));
 				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "heatRate = %.6e\n", heatRate));
 				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "asthenoTemp = %.5f\n", asthenoTemp));
-				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "check = %d\n", check));
 				PetscCall(PetscPrintf(PETSC_COMM_WORLD, "==================\n"));
 			}
 		}
