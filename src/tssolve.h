@@ -45,6 +45,7 @@ struct TSSol
 	PetscInt    nstep_rdb;                 // save restart database every n steps
 	PetscInt    fix_dt;                    // flag to keep time steps fixed for advection (elasticity, kinematic block BC)
 	PetscInt    istep;                     // time step counter
+	PetscInt 	iter_start;				   // start of iteration *mcr
 };
 
 //---------------------------------------------------------------------------
